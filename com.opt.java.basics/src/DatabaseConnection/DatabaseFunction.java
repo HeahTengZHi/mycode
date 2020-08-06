@@ -2,11 +2,9 @@ package DatabaseConnection;
 
 import java.util.Map;
 
-public interface DatabaseFunction {
-
-		Map<Integer,Employee> getAllData();
-		Map<Integer,Employee> updateData();
-		Map<Integer,Employee> deleteData();
-		Map<Integer,Employee> addData();
-	
+public interface DatabaseFunction<Integer,T> {
+		Map<Integer,T> getAllData();
+		Map<Integer,T> updateData();
+		Map<Integer,T> deleteData();
+		Map<Integer,T> addData();
 }

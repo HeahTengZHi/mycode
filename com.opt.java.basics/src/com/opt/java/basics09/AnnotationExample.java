@@ -38,6 +38,7 @@ import java.lang.annotation.*;
 }
 
 //@Documented //The annotation should be displayed in Java doc it can be apply every location
+@Documented
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE) //RetentionPolicy.Source for annotations which are intended for compiler only
 @interface OverrideCode{		  //It use to check parent class, method, parameter etc

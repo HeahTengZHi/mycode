@@ -1,5 +1,6 @@
 package DatabaseConnection;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,20 +10,22 @@ import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class EmployeeDB implements DatabaseFunction{
+public class EmployeeDB implements DatabaseFunction<Integer,Employee>{
 	
 	
 	DBUtil con= new DBUtil();
 	Scanner sc=new Scanner(System.in);
 	Map<Integer, Employee> employees=new ConcurrentHashMap<>();
 	Employee emp=new Employee();
+	//Stored Procedure use more heap memory.
 	
 	@Override
 	public Map<Integer, Employee> getAllData() {
-		String selectEmployee="Select * from employee";
+		//String selectEmployee="Select * from employee";
 		try {
-			Statement pst=con.getConnection().createStatement();
-			ResultSet rs=pst.executeQuery(selectEmployee);
+			//Statement pst=con.getConnection().createStatement();
+			CallableStatement cs=con.getConnection().prepareCall("call getAllEmployee()");
+			ResultSet rs=cs.executeQuery();
 			System.out.println("Employee List:");
 			while(rs.next()) {
 				employees.put(rs.getInt(1), new Employee(rs.getString(2),rs.getString(3)));
@@ -43,10 +46,11 @@ public class EmployeeDB implements DatabaseFunction{
 		System.out.print("Employee Email:");
 		emp.setEmail(sc.next());
 		try {
-			PreparedStatement pst = con.getConnection().prepareStatement("insert into employee (`name`, `email`) values(?,?)");
-			pst.setString(1,emp.getName());
-			pst.setString(2,emp.getEmail());
-			int empID=pst.executeUpdate();
+			//PreparedStatement pst = con.getConnection().prepareStatement("insert into employee (`name`, `email`) values(?,?)");
+			CallableStatement cs=con.getConnection().prepareCall("call insertEmployee(?,?)");
+			cs.setString(1,emp.getName());
+			cs.setString(2,emp.getEmail());
+			int empID=cs.executeUpdate();
 			if(empID>0) {
 				System.out.println("Employee: "+emp.getName()+" inserted\n");
 				employees.put(emp.getEmp_ID(), new Employee(emp.getName(),emp.getEmail()));
@@ -73,7 +77,8 @@ public class EmployeeDB implements DatabaseFunction{
 		System.out.print("Employee Email:");
 		emp.setEmail(sc.next());
 		try {
-			PreparedStatement pst=con.getConnection().prepareStatement("update employee set name=?, email=? where emp_ID=?");
+			//PreparedStatement pst=con.getConnection().prepareStatement("update employee set name=?, email=? where emp_ID=?");
+			CallableStatement pst=con.getConnection().prepareCall("call updateEmployee(?,?,?)");
 			pst.setString(1,emp.getName());
 			pst.setString(2,emp.getEmail());
 			pst.setInt(3,emp.getEmp_ID());
@@ -101,11 +106,11 @@ public class EmployeeDB implements DatabaseFunction{
 	@SuppressWarnings("finally")
 	@Override
 	public Map<Integer, Employee> deleteData() {
-		Employee emp=new Employee();
 		System.out.print("Delete Employee ID:");
 		emp.setEmp_ID(sc.nextInt());
 		try {
-			PreparedStatement pst=con.getConnection().prepareStatement("delete from employee where emp_ID=?");
+			//PreparedStatement pst=con.getConnection().prepareStatement("delete from employee where emp_ID=?");
+			CallableStatement pst=con.getConnection().prepareCall("call deleteEmployee(?)");
 			pst.setInt(1,emp.getEmp_ID());
 			int updateEmp=pst.executeUpdate();
 			if(updateEmp>0) {
@@ -125,7 +130,7 @@ public class EmployeeDB implements DatabaseFunction{
 	void employeeMethod(){
 		employees=getAllData();
 		Map<Integer, Employee> employeesSorted=new TreeMap<>(employees);
-		employeesSorted.keySet().forEach(key-> System.out.println("[Employee ID= "+key+" "+employees.get(key)+"]"));
+		employeesSorted.keySet().forEach(key-> System.out.println("[Employee ID= "+key+" "+employees.get(key).getName()+"]"));
 		System.out.print("\nSelect your choice: \n1.Add Employee\n2.Update Employee\n3.Delete Employee\nEnter: ");
 		int choice=sc.nextInt();
 		
